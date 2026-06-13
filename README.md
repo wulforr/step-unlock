@@ -1,56 +1,56 @@
-# Welcome to your Expo app 👋
+# StepUnlock
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+*Walk to earn your scroll.* An Android app that turns walking into earned
+screen-time: the more you walk, the more you're allowed to scroll. When the
+budget runs out, your chosen apps get locked behind a full-screen overlay until
+you move.
 
-## Get started
+Personal-use v1 — on-device only, no backend, no Play Store. Android-only
+(Health Connect + app-blocking are Android-specific). Full product and
+architecture docs live in [`docs/`](./docs).
 
-1. Install dependencies
+## Status
 
-   ```bash
-   npm install
-   ```
+| Phase | Scope | State |
+|-------|-------|-------|
+| **0** | Project setup, Health Connect read on device | ✅ done |
+| **1** | Earn loop (steps → live balance), app picker, settings, onboarding | ✅ done |
+| **2** | Foreground-service foreground-app detection + spend + native HC reads | ✅ done |
+| **3** | The lock: warning → countdown → overlay → auto-clear | ✅ done |
+| **3+** | Per-app spend breakdown, reboot survival (BootReceiver) | ✅ done |
+| **4** | Battery-optimization exemption, history/insights | ⬜ next |
 
-2. Start the app
+## Run it
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Requires Android SDK + an emulator (Pixel API 35 works; Health Connect is built
+into Android 14+) or a real device.
 
 ```bash
-npm run reset-project
+npm install
+npx expo run:android   # prebuild + build dev client + install + start Metro
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+JS changes hot-reload via Metro. Native/manifest/config-plugin changes need a
+rebuild (`npx expo run:android` again).
 
-### Other setup steps
+On an emulator there's no real step source — use the `__DEV__`-only
+**"+ Add 1,000 test steps"** button on the Today screen to seed Health Connect
+and exercise the earn loop.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## How it's built
 
-## Learn more
+- **UI** — `src/app` (expo-router): `(tabs)` Today / Apps / Settings, plus an
+  `onboarding` permission-gate.
+- **State** — `src/state/store.ts`, zustand + MMKV. `remaining` is always derived
+  from steps − spend (`src/lib/budget.ts`), never stored.
+- **Steps** — Health Connect, `src/lib/healthConnect.ts` + `refreshSteps`.
+- **Native** — two local Expo modules in `modules/`: `installed-apps` (picker
+  list) and `system-permissions` (Usage Access / overlay / battery deep-links).
+- **Config plugins** — `plugins/` (manifest extras + Health Connect wiring).
 
-To learn more about developing your project with Expo, look at the following resources:
+See [`CLAUDE.md`](./CLAUDE.md) for the Health Connect setup gotchas.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Default economy
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1,000 steps = 10 minutes · reset 06:00 local · hard lock · no rollover.
+All editable in Settings.

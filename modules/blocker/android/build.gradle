@@ -1,0 +1,25 @@
+plugins {
+  id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.blocker'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.blocker"
+  defaultConfig {
+    minSdkVersion 26
+    versionCode 1
+    versionName "0.1.0"
+  }
+}
+
+dependencies {
+  // Read today's steps directly in the service so the balance stays current
+  // even when the JS app is swiped away. Pinned to the same version
+  // react-native-health-connect uses to avoid a resolution conflict.
+  implementation "androidx.health.connect:connect-client:1.1.0-alpha11"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
+}
