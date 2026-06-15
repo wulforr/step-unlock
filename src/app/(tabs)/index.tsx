@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useBalance } from '@/hooks/use-balance';
+import { useBatteryExemption } from '@/hooks/use-battery-exemption';
 import { refreshSteps } from '@/lib/refresh-steps';
 import { clearSteps, writeTestSteps } from '@/lib/healthConnect';
 import { logicalDayBounds } from '@/lib/day';
@@ -25,6 +26,7 @@ export default function TodayScreen() {
   const blockedApps = useStore((s) => s.blockedApps);
   const spendByPackage = useStore((s) => s.spendByPackage);
   const blockedCount = useStore((s) => enabledBlockedPackages(s).length);
+  const { exempt: batteryExempt, request: requestBattery } = useBatteryExemption();
 
   // Per-app spend breakdown: every enabled blocked app, plus any app that
   // already racked up time today (even if since un-blocked), highest first.
@@ -92,6 +94,16 @@ export default function TodayScreen() {
                 />
               </Pressable>
             </Link>
+          ) : null}
+
+          {!batteryExempt && blockedCount > 0 ? (
+            <Pressable onPress={requestBattery}>
+              <Banner
+                tone="warning"
+                title="Blocker may be stopped in the background"
+                message="Tap to let StepUnlock ignore battery optimization so apps still lock when you run out."
+              />
+            </Pressable>
           ) : null}
 
           <View style={styles.ringWrap}>

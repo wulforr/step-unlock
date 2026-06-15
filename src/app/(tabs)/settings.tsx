@@ -7,6 +7,7 @@ import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useBatteryExemption } from '@/hooks/use-battery-exemption';
 import { useTheme } from '@/hooks/use-theme';
 import { stepsPerMinute } from '@/lib/budget';
 import { formatSteps } from '@/lib/format';
@@ -92,10 +93,12 @@ function pad2(n: number): string {
 }
 
 export default function SettingsScreen() {
+  const theme = useTheme();
   const settings = useStore((s) => s.settings);
   const setMinutesPer1000 = useStore((s) => s.setMinutesPer1000);
   const setResetHour = useStore((s) => s.setResetHour);
   const setLockMode = useStore((s) => s.setLockMode);
+  const { exempt: batteryExempt, request: requestBattery } = useBatteryExemption();
 
   const stepsForOneMin = Math.round(stepsPerMinute(settings.minutesPer1000));
 
@@ -160,6 +163,37 @@ export default function SettingsScreen() {
             </View>
           </Card>
 
+          <Card>
+            <View style={styles.settingRow}>
+              <View style={styles.settingText}>
+                <ThemedText type="default">Background reliability</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Ignore battery optimization so the blocker keeps running
+                </ThemedText>
+              </View>
+              {batteryExempt ? (
+                <View style={styles.statusOn}>
+                  <Ionicons name="checkmark-circle" size={20} color="#2DB76A" />
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    On
+                  </ThemedText>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={requestBattery}
+                  style={[styles.enableBtn, { backgroundColor: theme.backgroundSelected }]}>
+                  <ThemedText type="smallBold">Enable</ThemedText>
+                </Pressable>
+              )}
+            </View>
+            {!batteryExempt ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Without this, Android may kill the blocker in the background and
+                apps won’t lock when you run out of budget.
+              </ThemedText>
+            ) : null}
+          </Card>
+
           <Link href="/onboarding" asChild>
             <Pressable>
               <Card>
@@ -199,6 +233,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepValue: { minWidth: 52, textAlign: 'center', fontWeight: '700' },
+  statusOn: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
+  enableBtn: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+  },
   segmented: { flexDirection: 'row', borderRadius: Spacing.two, padding: 2 },
   segment: {
     paddingHorizontal: Spacing.three,
