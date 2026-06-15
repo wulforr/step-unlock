@@ -18,6 +18,8 @@ import {
   SdkAvailabilityStatus,
 } from 'react-native-health-connect';
 
+import { logicalDayBounds, logicalDayKey, type DayKey } from '@/lib/day';
+
 export type HealthConnectStatus =
   | 'available'
   | 'unavailable'
@@ -80,6 +82,30 @@ export async function readSteps(start: Date, end: Date): Promise<number> {
     },
   });
   return result.COUNT_TOTAL ?? 0;
+}
+
+export type DailySteps = { day: DayKey; steps: number };
+
+/**
+ * Steps for each of the last `days` logical days (today first), aggregated over
+ * the same reset-hour-shifted windows the rest of the app uses. One Health
+ * Connect aggregate per day, run concurrently. Today's window extends into the
+ * future, which Health Connect handles fine (it just returns steps so far).
+ */
+export async function readDailySteps(
+  days: number,
+  resetHour: number
+): Promise<DailySteps[]> {
+  await ensureInitialized();
+  const now = new Date();
+  const tasks: Promise<DailySteps>[] = [];
+  for (let i = 0; i < days; i++) {
+    const ref = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const { start, end } = logicalDayBounds(ref, resetHour);
+    const day = logicalDayKey(ref, resetHour);
+    tasks.push(readSteps(start, end).then((steps) => ({ day, steps })));
+  }
+  return Promise.all(tasks);
 }
 
 /** Deep-link the user into the Health Connect settings screen. */
