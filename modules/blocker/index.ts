@@ -67,6 +67,29 @@ export function getSpendBreakdownToday(): Record<string, number> {
   return native?.getSpendBreakdownToday() ?? {};
 }
 
+/** One logical day's spend: total seconds plus the per-package split. */
+export type DaySpend = {
+  /** Logical-day key, yyyy-MM-dd. */
+  day: string;
+  /** Total seconds spent on blocked apps that day. */
+  total: number;
+  /** Per-package seconds: `{ "com.example": 125, ... }`. */
+  byPackage: Record<string, number>;
+};
+
+/**
+ * Spend for the last `days` logical days, today first. Days with no recorded
+ * spend come back with a zero total so the series is continuous.
+ */
+export function getSpendHistory(days: number): DaySpend[] {
+  return (native?.getSpendHistory(Math.max(1, Math.round(days))) ?? []) as DaySpend[];
+}
+
+/** Delete spend entries older than the most recent `keepDays` days. */
+export function pruneSpendHistory(keepDays: number): void {
+  native?.pruneSpendHistory(Math.max(1, Math.round(keepDays)));
+}
+
 /** The package the service currently sees in the foreground ('' if none/idle). */
 export function getForegroundPackage(): string {
   return native?.getForegroundPackage() ?? '';

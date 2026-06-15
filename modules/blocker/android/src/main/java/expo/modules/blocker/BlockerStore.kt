@@ -24,6 +24,7 @@ class BlockerStore(context: Context) {
     private const val KEY_LOCK_MODE = "lock_mode"
     private const val KEY_STEPS = "steps"
     private const val KEY_SPEND_PREFIX = "spend_"
+    private const val DAY_MILLIS = 24L * 60L * 60L * 1000L
   }
 
   // --- config (JS-owned) ---
@@ -119,6 +120,59 @@ class BlockerStore(context: Context) {
     if (seconds <= 0 || packageName.isEmpty()) return
     val key = todayPrefix() + packageName
     prefs.edit().putInt(key, prefs.getInt(key, 0) + seconds).apply()
+  }
+
+  // --- history (service-owned, read by the Insights screen) ---
+
+  /**
+   * Per-day spend for the last [days] logical days, today first. Each entry is
+   * the day key, the total seconds, and the per-package breakdown. Days with no
+   * recorded spend are included with a zero total so the UI can plot a
+   * continuous series. The spend keys are `spend_<yyyy-MM-dd>_<package>`, so the
+   * day is the fixed-width 10-char slice after the prefix and the package is the
+   * remainder.
+   */
+  fun spendHistory(days: Int): List<Map<String, Any>> {
+    val all = prefs.all
+    val now = System.currentTimeMillis()
+    val out = ArrayList<Map<String, Any>>(days)
+    for (i in 0 until days) {
+      val day = logicalDayKey(now - i * DAY_MILLIS)
+      val prefix = "$KEY_SPEND_PREFIX${day}_"
+      val byPackage = all.entries
+        .filter { it.key.startsWith(prefix) && it.value is Int }
+        .associate { it.key.removePrefix(prefix) to (it.value as Int) }
+      out.add(
+        mapOf(
+          "day" to day,
+          "total" to byPackage.values.sum(),
+          "byPackage" to byPackage
+        )
+      )
+    }
+    return out
+  }
+
+  /**
+   * Drop spend entries older than the most recent [keepDays] logical days so the
+   * SharedPreferences file doesn't grow without bound. Day keys are
+   * yyyy-MM-dd, which sorts lexicographically the same as chronologically.
+   */
+  fun pruneSpendOlderThan(keepDays: Int) {
+    if (keepDays <= 0) return
+    val cutoff = logicalDayKey(System.currentTimeMillis() - (keepDays - 1) * DAY_MILLIS)
+    val editor = prefs.edit()
+    var changed = false
+    for (key in prefs.all.keys) {
+      if (!key.startsWith(KEY_SPEND_PREFIX)) continue
+      val rest = key.removePrefix(KEY_SPEND_PREFIX)
+      if (rest.length < 10) continue
+      if (rest.substring(0, 10) < cutoff) {
+        editor.remove(key)
+        changed = true
+      }
+    }
+    if (changed) editor.apply()
   }
 
   /** Live remaining-minutes balance: earned − spent. May be ≤ 0. */

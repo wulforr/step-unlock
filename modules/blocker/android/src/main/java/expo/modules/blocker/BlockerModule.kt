@@ -57,6 +57,14 @@ class BlockerModule : Module() {
       store.spendBreakdownToday()
     }
 
+    Function("getSpendHistory") { days: Int ->
+      store.spendHistory(days)
+    }
+
+    Function("pruneSpendHistory") { keepDays: Int ->
+      store.pruneSpendOlderThan(keepDays)
+    }
+
     Function("getForegroundPackage") {
       BlockerService.foregroundPackage
     }
