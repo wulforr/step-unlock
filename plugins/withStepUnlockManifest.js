@@ -19,6 +19,23 @@ const withStepUnlockManifest = (config) => {
     const manifest = config.modResults.manifest;
     const application = manifest.application[0];
 
+    // Let us pop the system "ignore battery optimization?" dialog directly so the
+    // foreground service isn't killed by aggressive OEM power management. (Play
+    // Store restricts this permission, but StepUnlock is sideloaded/personal-use.)
+    if (!Array.isArray(manifest['uses-permission'])) {
+      manifest['uses-permission'] = [];
+    }
+    const BATTERY_PERMISSION =
+      'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS';
+    const hasBatteryPermission = manifest['uses-permission'].some(
+      (p) => p?.$?.['android:name'] === BATTERY_PERMISSION
+    );
+    if (!hasBatteryPermission) {
+      manifest['uses-permission'].push({
+        $: { 'android:name': BATTERY_PERMISSION },
+      });
+    }
+
     // Android 14+ platform Health Connect requires the app to declare an
     // activity that handles VIEW_PERMISSION_USAGE with the HEALTH_PERMISSIONS
     // category (it surfaces the app's privacy-policy rationale). Without it,

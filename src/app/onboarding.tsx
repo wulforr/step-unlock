@@ -26,9 +26,9 @@ import {
   canDrawOverlays,
   hasUsageAccess,
   isIgnoringBatteryOptimizations,
-  openBatteryOptimizationSettings,
   openOverlaySettings,
   openUsageAccessSettings,
+  requestIgnoreBatteryOptimizations,
 } from '@/modules/system-permissions';
 import { useStore } from '@/state/store';
 
@@ -193,7 +193,7 @@ export default function OnboardingScreen() {
             subtitle="Optional — keeps the service alive in the background"
             status={perms.battery}
             optional
-            onPress={openBatteryOptimizationSettings}
+            onPress={requestIgnoreBatteryOptimizations}
           />
 
           <Pressable

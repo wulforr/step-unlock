@@ -74,5 +74,31 @@ class SystemPermissionsModule : Module() {
       }
       context.startActivity(intent)
     }
+
+    // Ask for the exemption directly via the system "Allow X to ignore battery
+    // optimization?" dialog (ACTION_REQUEST_…), instead of dropping the user into
+    // the full battery list and making them hunt for us. Needs the
+    // REQUEST_IGNORE_BATTERY_OPTIMIZATIONS manifest permission (added by the
+    // manifest plugin). Falls back to the settings list if the dialog can't be
+    // shown (e.g. already exempt, or OEM without the activity).
+    @Suppress("BatteryLife")
+    Function("requestIgnoreBatteryOptimizations") {
+      val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+      if (pm.isIgnoringBatteryOptimizations(context.packageName)) return@Function
+
+      val request = Intent(
+        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+        Uri.parse("package:${context.packageName}")
+      ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+
+      try {
+        context.startActivity(request)
+      } catch (e: Exception) {
+        val fallback = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(fallback)
+      }
+    }
   }
 }

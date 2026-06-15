@@ -40,3 +40,12 @@ export function isIgnoringBatteryOptimizations(): boolean {
 export function openBatteryOptimizationSettings(): void {
   native?.openBatteryOptimizationSettings();
 }
+
+/**
+ * Show the system "Allow StepUnlock to ignore battery optimization?" dialog
+ * directly — one tap instead of digging through the battery list. No-ops if
+ * already exempt; falls back to the settings list if the dialog is unavailable.
+ */
+export function requestIgnoreBatteryOptimizations(): void {
+  native?.requestIgnoreBatteryOptimizations();
+}
