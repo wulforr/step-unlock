@@ -80,17 +80,6 @@ plugins/          config plugins (manifest extras, Health Connect wiring)
 docs/             PRD + technical design doc
 ```
 
-## Status
-
-| Phase | Scope | State |
-|-------|-------|-------|
-| **0** | Project setup, Health Connect reads on-device | ✅ done |
-| **1** | Earn loop (steps → live balance), app picker, settings, onboarding | ✅ done |
-| **2** | Foreground-service detection + spend + native step reads | ✅ done |
-| **3** | The lock: warning → countdown → overlay → auto-clear | ✅ done |
-| **3+** | Per-app spend breakdown, reboot survival (BootReceiver) | ✅ done |
-| **4** | Battery-optimization exemption, history / insights | ✅ done |
-
 ## License
 
 MIT — see [LICENSE](./LICENSE).
