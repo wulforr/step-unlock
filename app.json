@@ -8,7 +8,7 @@
     "scheme": "stepunlock",
     "userInterfaceStyle": "automatic",
     "android": {
-      "package": "io.kgen.stepunlock",
+      "package": "io.wulforr.stepunlock",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -64,6 +64,9 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "ios": {
+      "bundleIdentifier": "io.wulforr.stepunlock"
     }
   }
 }
